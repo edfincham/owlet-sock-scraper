@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16.2-alpine
+    container_name: postgres-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    env_file: 
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - docker-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file: 
+      - .env
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - docker-network
+
+  owlet:
+    image: owlet-app
+    container_name: owlet
+    env_file: 
+      - .env
+    network_mode: "host"
+
+volumes:
+  postgres_data:
+  grafana-storage:
+
+networks:
+  docker-network:

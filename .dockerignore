@@ -1,0 +1,8 @@
+*
+!api
+!db
+!db/**
+!sock
+!main.go
+!go.mod
+!go.sum
