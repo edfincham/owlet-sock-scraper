@@ -5,7 +5,7 @@ This application polls the API service (Ayla) which serves as a backend for the 
 ## Why?
 The app kinda sucks
 
-## How
+## How?
 This is based on the work of others (e.g. this [Python implementation](https://github.com/BastianPoe/owlet_api)), but has been tweaked and edit to suit my needs. It's also written in Go.
 
 ### Running Locally
@@ -39,3 +39,19 @@ Or build the docker image and the whole setup via Docker Compose:
 docker build -t owlet-app .
 docker compose up
 ```
+
+### Grafana
+A dashboard JSON for display the heart rate and blood oxygenation is provided within the `grafana` directory. To get this to work, a Postgres data source must be configured in the Grafana UI. Assuming the example `.env` is used, the following fields should work:
+
+#### Connection
+ - Name: `grafana-postgresql-datasource`
+ - Host URL: `db:5432`
+ - Database name: `owletDB`
+
+#### Authentication
+ - Username: `postgres`
+ - Password: ...
+ - TLS/SSL Mode: `disable`
+
+#### Additional Settings
+ - PostgreSQL Version: `15`
