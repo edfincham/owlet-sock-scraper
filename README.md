@@ -36,7 +36,7 @@ go run .
 #### Dockerised
 Or build the docker image and the whole setup via Docker Compose:
 ```shell
-docker build -t owlet-app .
+docker build -t edfincham/owlet-sock-scraper:latest .
 docker compose up
 ```
 
@@ -55,3 +55,8 @@ A dashboard JSON for display the heart rate and blood oxygenation is provided wi
 
 #### Additional Settings
  - PostgreSQL Version: `15`
+
+
+## DEBUG
+owlet        | 2024/09/27 20:26:55 Failed to update vitals for sock AC000W016886224: Error sending request: Post "https://securetoken.googleapis.com/v1/token?key=AIzaSyDm6EhV70wudwN3iOSq3vTjtsdGjdFLuuM": http2: server sent GOAWAY and closed the connection; LastStreamID=1127, ErrCode=NO_ERROR, debug="session_timed_out"
+
