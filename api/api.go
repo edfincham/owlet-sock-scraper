@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -122,7 +123,13 @@ func (api *OwletAPI) Authenticate() error {
 		}
 	}
 
-	if api.authToken == "" || time.Now().After(api.expiry) {
+	if api.authToken == "" {
+		log.Println("Auth token empty; refreshing")
+		return api.refreshAuthentication()
+	}
+
+	if time.Now().After(api.expiry) {
+		log.Println("Auth token expired; refreshing")
 		return api.refreshAuthentication()
 	}
 
@@ -131,6 +138,8 @@ func (api *OwletAPI) Authenticate() error {
 }
 
 func (api *OwletAPI) passwordVerification() error {
+	log.Println("Verifying password.")
+
 	apiKey := regionInfo[api.region].APIKey
 	urlStr := fmt.Sprintf("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=%s", apiKey)
 
@@ -200,6 +209,8 @@ func (api *OwletAPI) passwordVerification() error {
 }
 
 func (api *OwletAPI) refreshAuthentication() error {
+	log.Println("Refreshing authentication tokens.")
+
 	if api.refresh == "" {
 		return NewOwletAuthenticationError("No refresh token supplied")
 	}
@@ -260,6 +271,8 @@ func (api *OwletAPI) refreshAuthentication() error {
 }
 
 func (api *OwletAPI) getMiniToken(idToken string) (string, error) {
+	log.Println("Getting mini authentication token.")
+
 	url := regionInfo[api.region].URLMini
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -295,6 +308,8 @@ func (api *OwletAPI) getMiniToken(idToken string) (string, error) {
 }
 
 func (api *OwletAPI) tokenSignIn(miniToken string) error {
+	log.Println("Getting authentication tokens.")
+
 	url := regionInfo[api.region].URLSignin
 
 	data := map[string]string{
@@ -356,10 +371,16 @@ func (api *OwletAPI) tokenSignIn(miniToken string) error {
 }
 
 func (api *OwletAPI) validateAuthentication() error {
+	log.Println("Validating authentication token.")
+
 	url := regionInfo[api.region].URLBase
 	req, err := http.NewRequest("GET", url+"/devices.json", nil)
 	if err != nil {
 		return err
+	}
+
+	for key, value := range api.headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := api.httpClient.Do(req)
@@ -369,7 +390,7 @@ func (api *OwletAPI) validateAuthentication() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		// Authentication token is not valid, try to refresh it
+		log.Println("Invalid token; refreshing...")
 		api.authToken = ""
 		err = api.Authenticate()
 		if err != nil {
@@ -389,9 +410,10 @@ func (api *OwletAPI) Tokens() TokenInfo {
 }
 
 func (api *OwletAPI) GetDevices() (map[string]interface{}, error) {
-	tempTokens := api.Tokens()
+	log.Println("Getting devices.")
 
-	devices, err := api.request("GET", "/devices.json", nil)
+	tempTokens := api.Tokens()
+	devices, err := api.request("GET", "/devices.json", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -403,7 +425,7 @@ func (api *OwletAPI) GetDevices() (map[string]interface{}, error) {
 	}
 
 	if len(deviceList) < 1 {
-		return nil, errors.New("no devices found")
+		return nil, errors.New("No devices found")
 	}
 
 	result := map[string]interface{}{
@@ -422,7 +444,8 @@ func (api *OwletAPI) Activate(deviceSerial string) error {
 		},
 	}
 
-	_, err := api.request("POST", fmt.Sprintf("/dsns/%s/properties/APP_ACTIVE/datapoints.json", deviceSerial), data)
+	log.Printf("Activating device %s.", deviceSerial)
+	_, err := api.request("POST", fmt.Sprintf("/dsns/%s/properties/APP_ACTIVE/datapoints.json", deviceSerial), data, nil)
 	return err
 }
 
@@ -435,7 +458,7 @@ func (api *OwletAPI) GetProperties(deviceSerial string) (map[string]interface{},
 		return nil, err
 	}
 
-	response, err := api.request("GET", fmt.Sprintf("/dsns/%s/properties.json", deviceSerial), nil)
+	response, err := api.request("GET", fmt.Sprintf("/dsns/%s/properties.json", deviceSerial), nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -469,47 +492,77 @@ func (api *OwletAPI) CheckTokens(tempTokens TokenInfo) *TokenInfo {
 	return nil
 }
 
-func (api *OwletAPI) request(method, url string, data interface{}) (json.RawMessage, error) {
-	err := api.validateAuthentication()
-	if err != nil {
-		return nil, err
-	}
+func (api *OwletAPI) request(method, url string, data interface{}, additionalHeaders map[string]string) (json.RawMessage, error) {
+	maxRetries := 10
+	baseDelay := time.Second * 5
 
-	baseUrl := regionInfo[api.region].URLBase
+	var resp *http.Response
+	var body []byte
+	var err error
 
-	var req *http.Request
-	if data != nil {
-		jsonData, err := json.Marshal(data)
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		log.Printf("Requesting %s, attempt %d", url, attempt)
+		if attempt > 0 {
+			delay := time.Duration(attempt) * baseDelay
+			time.Sleep(delay)
+		}
+
+		err = api.validateAuthentication()
 		if err != nil {
 			return nil, err
 		}
-		req, err = http.NewRequest(method, baseUrl+url, bytes.NewBuffer(jsonData))
-	} else {
-		req, err = http.NewRequest(method, baseUrl+url, nil)
-	}
-	if err != nil {
-		return nil, err
-	}
 
-	for key, value := range api.headers {
-		req.Header.Set(key, value)
-	}
-	req.Header.Set("Content-Type", "application/json")
+		baseUrl := regionInfo[api.region].URLBase
 
-	resp, err := api.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+		var req *http.Request
+		if data != nil {
+			jsonData, err := json.Marshal(data)
+			if err != nil {
+				return nil, err
+			}
+			req, err = http.NewRequest(method, baseUrl+url, bytes.NewBuffer(jsonData))
+		} else {
+			req, err = http.NewRequest(method, baseUrl+url, nil)
+		}
+		if err != nil {
+			return nil, err
+		}
 
-	if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		return nil, fmt.Errorf("error sending request: %d", resp.StatusCode)
-	}
+		for key, value := range api.headers {
+			req.Header.Set(key, value)
+		}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
+		for key, value := range additionalHeaders {
+			req.Header.Set(key, value)
+		}
 
-	return body, nil
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err = api.httpClient.Do(req)
+		if err != nil {
+			if attempt == maxRetries {
+				return nil, fmt.Errorf("Max retries reached: %w", err)
+			}
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 && resp.StatusCode != 201 {
+			if attempt == maxRetries {
+				return nil, fmt.Errorf("Max retries reached - error sending request: %d", resp.StatusCode)
+			}
+			continue
+		}
+
+		body, err = io.ReadAll(resp.Body)
+		if err != nil {
+			if attempt == maxRetries {
+				return nil, fmt.Errorf("max retries reached: %w", err)
+			}
+			continue
+		}
+
+		return body, nil
+	}
+	return nil, fmt.Errorf("Unexpected error: all retries failed")
 }
