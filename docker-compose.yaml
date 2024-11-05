@@ -28,7 +28,7 @@ services:
       - docker-network
 
   owlet:
-    image: owlet-app
+    image: edfincham/owlet-sock-scraper:latest
     container_name: owlet
     env_file: 
       - .env

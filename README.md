@@ -36,7 +36,7 @@ go run .
 #### Dockerised
 Or build the docker image and the whole setup via Docker Compose:
 ```shell
-docker build -t owlet-app .
+docker build -t edfincham/owlet-sock-scraper:latest .
 docker compose up
 ```
 
