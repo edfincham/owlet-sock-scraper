@@ -228,9 +228,25 @@ func (api *OwletAPI) refreshAuthentication() error {
 		return NewOwletError(fmt.Sprintf("Error marshaling JSON: %v", err))
 	}
 
-	req, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return NewOwletError(fmt.Sprintf("Error creating request: %v", err))
+	maxRetries := 5
+	retryDelay := time.Second * 2
+
+	var req *http.Request
+	for i := 0; i <= maxRetries; i++ {
+		req, err = http.NewRequest("POST", urlStr, bytes.NewBuffer(jsonData))
+		if err == nil {
+			break
+		}
+
+		if i < maxRetries {
+			log.Printf("Attempt %d failed to create request: %v", i+1, err)
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+		}
+
+		if i == maxRetries {
+			return NewOwletError(fmt.Sprintf("Error creating request after %d attempts: %v", maxRetries, err))
+		}
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -413,7 +429,29 @@ func (api *OwletAPI) GetDevices() (map[string]interface{}, error) {
 	log.Println("Getting devices.")
 
 	tempTokens := api.Tokens()
-	devices, err := api.request("GET", "/devices.json", nil, nil)
+	maxRetries := 5
+	retryDelay := time.Second * 2
+
+	var devices []byte
+	var err error
+
+	for i := 0; i <= maxRetries; i++ {
+		devices, err = api.request("GET", "/devices.json", nil, nil)
+		if err == nil {
+			break
+		}
+
+		if i < maxRetries {
+			log.Printf("Attempt %d failed, retrying in %v: %v", i+1, retryDelay, err)
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+		}
+
+		if i == maxRetries {
+			return nil, NewOwletError(fmt.Sprintf("Error creating request after %d attempts: %v", maxRetries, err))
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -500,10 +538,10 @@ func (api *OwletAPI) request(method, url string, data interface{}, additionalHea
 	var body []byte
 	var err error
 
-	for attempt := 0; attempt <= maxRetries; attempt++ {
-		log.Printf("Requesting %s, attempt %d", url, attempt)
-		if attempt > 0 {
-			delay := time.Duration(attempt) * baseDelay
+	for i := 0; i <= maxRetries; i++ {
+		log.Printf("Requesting %s, attempt %d", url, i+1)
+		if i > 0 {
+			delay := time.Duration(i) * baseDelay
 			time.Sleep(delay)
 		}
 
@@ -540,7 +578,7 @@ func (api *OwletAPI) request(method, url string, data interface{}, additionalHea
 
 		resp, err = api.httpClient.Do(req)
 		if err != nil {
-			if attempt == maxRetries {
+			if i == maxRetries {
 				return nil, fmt.Errorf("Max retries reached: %w", err)
 			}
 			continue
@@ -548,7 +586,7 @@ func (api *OwletAPI) request(method, url string, data interface{}, additionalHea
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 && resp.StatusCode != 201 {
-			if attempt == maxRetries {
+			if i == maxRetries {
 				return nil, fmt.Errorf("Max retries reached - error sending request: %d", resp.StatusCode)
 			}
 			continue
@@ -556,7 +594,7 @@ func (api *OwletAPI) request(method, url string, data interface{}, additionalHea
 
 		body, err = io.ReadAll(resp.Body)
 		if err != nil {
-			if attempt == maxRetries {
+			if i == maxRetries {
 				return nil, fmt.Errorf("max retries reached: %w", err)
 			}
 			continue
