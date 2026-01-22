@@ -65,9 +65,9 @@ type Property struct {
 	DeniedRoles      []string    `json:"denied_roles"`
 	AckEnabled       bool        `json:"ack_enabled"`
 	RetentionDays    int         `json:"retention_days"`
-	AckStatus        *string     `json:"ack_status"`
-	AckMessage       *string     `json:"ack_message"`
-	AckedAt          *string     `json:"acked_at"`
+	AckStatus        interface{} `json:"ack_status"`
+	AckMessage       interface{} `json:"ack_message"`
+	AckedAt          interface{} `json:"acked_at"`
 }
 
 type PropertyMap struct {

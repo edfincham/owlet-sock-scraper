@@ -59,7 +59,12 @@ func main() {
 	}
 
 	devices := devicesResponse["response"].([]apiPkg.Device)
-	sock := sockPkg.NewSock(api, devices[0])
+	var socks []*sockPkg.Sock
+	for _, device := range devices {
+		sock := sockPkg.NewSock(api, device)
+		socks = append(socks, sock)
+		log.Printf("Initialized sock: %s", sock.Serial)
+	}
 
 	const (
 		baseDelay     = 5 * time.Second
@@ -71,27 +76,29 @@ func main() {
 	attemptCount := 0
 
 	for {
-		vitals, err := sock.UpdateVitals()
-		if err != nil {
-			log.Fatalf("Failed to update vitals for sock %s: %v", sock.Serial, err)
-		}
-
-		if vitals.Chg > 1 {
-			log.Printf("Sock is charging. Backing off for %v (attempt %d)", currentDelay, attemptCount)
-			delay := time.Duration(float64(baseDelay) * math.Pow(backoffFactor, float64(attemptCount)))
-			if delay > maxDelay {
-				delay = maxDelay
+		for _, sock := range socks {
+			vitals, err := sock.UpdateVitals()
+			if err != nil {
+				log.Fatalf("Failed to update vitals for sock %s: %v", sock.Serial, err)
 			}
 
-			currentDelay = delay
-			attemptCount++
-		} else {
-			currentDelay = baseDelay
-			attemptCount = 0
+			if vitals.Chg > 1 {
+				log.Printf("Sock %s is charging. Backing off for %v (attempt %d)", sock.Serial, currentDelay, attemptCount)
+				delay := time.Duration(float64(baseDelay) * math.Pow(backoffFactor, float64(attemptCount)))
+				if delay > maxDelay {
+					delay = maxDelay
+				}
 
-			err = models.InsertVitals(dbConn, *vitals)
-			if err != nil {
-				log.Fatalf("Failed to insert vitals: %v", err)
+				currentDelay = delay
+				attemptCount++
+			} else {
+				currentDelay = baseDelay
+				attemptCount = 0
+
+				err = models.InsertVitals(dbConn, *vitals, sock.Serial)
+				if err != nil {
+					log.Fatalf("Failed to insert vitals: %v", err)
+				}
 			}
 		}
 
