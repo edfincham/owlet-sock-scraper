@@ -102,7 +102,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ts AS \"time\",\n  hr AS \"Heart Rate\",\n  Serial AS \"Device\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\nORDER BY 1",
+          "rawSql": "SELECT\n  ts AS \"time\",\n  hr AS \"Heart Rate\",\n  Serial AS \"Device\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\n  AND Serial is NOT NULL\nORDER BY 1",
           "refId": "A",
           "select": [
             [

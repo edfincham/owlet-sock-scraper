@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owlet
+  namespace: owlet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owlet
+  template:
+    metadata:
+      labels:
+        app: owlet
+    spec:
+      containers:
+        - name: owlet
+          image: edfincham/owlet-sock-scraper:latest
+          env:
+            - name: OWLET_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: OWLET_USERNAME
+            - name: OWLET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: OWLET_PASSWORD
+            - name: OWLET_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: OWLET_REGION
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: POSTGRES_DB
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
