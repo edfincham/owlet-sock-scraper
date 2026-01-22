@@ -18,20 +18,19 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 0,
   "links": [],
   "panels": [
     {
       "datasource": {
-        "default": true,
-        "type": "grafana-postgresql-datasource",
-        "uid": "edy6ea6rnw7b4a"
+        "type": "grafana-postgresql-datasource"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "displayName": "${__field.labels.Device}",
           "mappings": [],
           "max": 190,
           "min": 50,
@@ -40,7 +39,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -92,19 +91,18 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "12.3.1",
       "targets": [
         {
           "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "edy6ea6rnw7b4a"
+            "type": "grafana-postgresql-datasource"
           },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ts AS \"time\",\n  hr AS \"Heart Rate\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\nORDER BY 1",
+          "rawSql": "SELECT\n  ts AS \"time\",\n  hr AS \"Heart Rate\",\n  Serial AS \"Device\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\nORDER BY 1",
           "refId": "A",
           "select": [
             [
@@ -150,15 +148,14 @@
     },
     {
       "datasource": {
-        "default": true,
-        "type": "grafana-postgresql-datasource",
-        "uid": "edy6ea6rnw7b4a"
+        "type": "grafana-postgresql-datasource"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "displayName": "${__field.labels.Device}",
           "mappings": [],
           "max": 190,
           "min": 50,
@@ -167,13 +164,13 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
                 "value": 80
               },
-             {
+              {
                 "color": "orange",
                 "value": 90
               },
@@ -215,19 +212,18 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "12.3.1",
       "targets": [
         {
           "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "edy6ea6rnw7b4a"
+            "type": "grafana-postgresql-datasource"
           },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ts AS \"time\",\n  ox AS \"Oxygenation\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\nORDER BY 1",
+          "rawSql": "SELECT\n  ts AS \"time\",\n  ox AS \"Oxygenation\",\n  Serial AS \"Device\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\n  AND Serial IS NOT NULL\nORDER BY 1",
           "refId": "A",
           "select": [
             [
@@ -273,9 +269,7 @@
     },
     {
       "datasource": {
-        "default": true,
-        "type": "grafana-postgresql-datasource",
-        "uid": "edy6ea6rnw7b4a"
+        "type": "grafana-postgresql-datasource"
       },
       "fieldConfig": {
         "defaults": {
@@ -287,7 +281,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -331,12 +325,11 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "12.3.1",
       "targets": [
         {
           "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "edy6ea6rnw7b4a"
+            "type": "grafana-postgresql-datasource"
           },
           "editorMode": "code",
           "format": "time_series",
@@ -389,22 +382,21 @@
     },
     {
       "datasource": {
-        "default": true,
-        "type": "grafana-postgresql-datasource",
-        "uid": "edy6ea6rnw7b4a"
+        "type": "grafana-postgresql-datasource"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "displayName": "${__field.labels.Device}",
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -440,19 +432,18 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "12.3.1",
       "targets": [
         {
           "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "edy6ea6rnw7b4a"
+            "type": "grafana-postgresql-datasource"
           },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  \"ts\" AS \"time\",\n  mv\nFROM vitals\nWHERE\n  $__timeFilter(\"ts\")\nORDER BY 1",
+          "rawSql": "SELECT\n  \"ts\" AS \"time\",\n  mv,\n  Serial AS \"Device\"\nFROM vitals\nWHERE\n  $__timeFilter(\"ts\")\n  AND Serial IS NOT NULL\nORDER BY 1",
           "refId": "A",
           "select": [
             [
@@ -498,9 +489,7 @@
     },
     {
       "datasource": {
-        "default": true,
-        "type": "grafana-postgresql-datasource",
-        "uid": "edy6ea6rnw7b4a"
+        "type": "grafana-postgresql-datasource"
       },
       "fieldConfig": {
         "defaults": {
@@ -531,7 +520,8 @@
               "type": "linear"
             },
             "showPoints": "always",
-            "spanNulls": false,
+            "showValues": false,
+            "spanNulls": true,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -540,6 +530,7 @@
               "mode": "line+area"
             }
           },
+          "displayName": "${__field.labels.Device}",
           "mappings": [],
           "max": 190,
           "min": 50,
@@ -548,15 +539,11 @@
             "steps": [
               {
                 "color": "red",
-                "value": null
+                "value": 0
               },
               {
                 "color": "transparent",
                 "value": 60
-              },
-              {
-                "color": "light-yellow",
-                "value": 120
               },
               {
                 "color": "red",
@@ -583,23 +570,23 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "12.3.1",
       "targets": [
         {
           "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "edy6ea6rnw7b4a"
+            "type": "grafana-postgresql-datasource"
           },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ts AS \"time\",\n  hr AS \"Heart Rate\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\nAND chg != 1\nAND hr != 0\nORDER BY 1",
+          "rawSql": "SELECT\n  ts AS \"time\",\n  hr AS \"Heart Rate\",\n  Serial AS \"Device\"\nFROM Vitals\nWHERE\n  $__timeFilter(\"ts\")\nAND chg != 1\nAND hr != 0\nAND Serial IS NOT NULL\nORDER BY 1",
           "refId": "A",
           "select": [
             [
@@ -645,9 +632,7 @@
     },
     {
       "datasource": {
-        "default": true,
-        "type": "grafana-postgresql-datasource",
-        "uid": "edy6ea6rnw7b4a"
+        "type": "grafana-postgresql-datasource"
       },
       "fieldConfig": {
         "defaults": {
@@ -678,7 +663,8 @@
               "type": "linear"
             },
             "showPoints": "always",
-            "spanNulls": false,
+            "showValues": false,
+            "spanNulls": true,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -687,6 +673,7 @@
               "mode": "line+area"
             }
           },
+          "displayName": "${__field.labels.Device}",
           "mappings": [],
           "max": 100,
           "min": 70,
@@ -695,7 +682,7 @@
             "steps": [
               {
                 "color": "red",
-                "value": null
+                "value": 0
               },
               {
                 "color": "transparent",
@@ -722,23 +709,23 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "12.3.1",
       "targets": [
         {
           "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "edy6ea6rnw7b4a"
+            "type": "grafana-postgresql-datasource"
           },
           "editorMode": "code",
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ts AS \"time\",\n  ox AS \"Oxygenation\"\nFROM vitals\nWHERE\n  $__timeFilter(\"ts\")\nAND ox != 0\nORDER BY 1",
+          "rawSql": "SELECT\n  ts AS \"time\",\n  ox AS \"Oxygenation\",\n  Serial AS \"Device\"\nFROM vitals\nWHERE\n  $__timeFilter(\"ts\")\nAND ox != 0\nAND Serial is NOT NULL\nORDER BY 1",
           "refId": "A",
           "select": [
             [
@@ -783,8 +770,9 @@
       "type": "timeseries"
     }
   ],
+  "preload": false,
   "refresh": "5s",
-  "schemaVersion": 39,
+  "schemaVersion": 42,
   "tags": [],
   "templating": {
     "list": []
@@ -796,7 +784,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Owlet Dashboard",
-  "uid": "cdy78jilrs9vkf",
-  "version": 6,
-  "weekStart": ""
-} 
+  "uid": "abcdefghijklmnopqrstuvwxyz",
+  "version": 1
+}
