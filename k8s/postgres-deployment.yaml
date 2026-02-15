@@ -38,12 +38,12 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
           resources:
-            requests:
-              memory: "64Mi"
-              cpu: "50m"
             limits:
-              memory: "128Mi"
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
               cpu: "100m"
+              memory: "128Mi"
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
