@@ -47,7 +47,7 @@ A dashboard JSON for display the heart rate and blood oxygenation is provided wi
  - Name: `grafana-postgresql-datasource`
  - Host URL:
     - Docker Compose: `db:5432`
-    - Kubernetes: `postgres.owlet` (i.e. `<service_name>.<namespace>`)
+    - Kubernetes: Use your external PostgreSQL host (configured in the `owlet-secrets` secret)
  - Database name: `owletDB`
 
 #### Authentication

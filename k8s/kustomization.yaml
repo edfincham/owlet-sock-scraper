@@ -4,7 +4,4 @@ kind: Kustomization
 namespace: owlet
 
 resources:
-  - postgres-pvc.yaml
-  - postgres-deployment.yaml
-  - postgres-service.yaml
   - owlet-deployment.yaml

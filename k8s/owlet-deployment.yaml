@@ -43,9 +43,15 @@ spec:
                   name: owlet-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_HOST
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: POSTGRES_HOST
             - name: POSTGRES_PORT
-              value: "5432"
+              valueFrom:
+                secretKeyRef:
+                  name: owlet-secrets
+                  key: POSTGRES_PORT
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
